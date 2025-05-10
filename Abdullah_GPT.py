@@ -6,7 +6,7 @@ API_KEY = "AIzaSyAy8PSYddSJIQ0A7iaS0rxkwVv185z4UQI"
 API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
 st.title("WELCOME TO THE ABDULLAH GPT")
 input=st.text_input("FEEL TO FREE ASK QUESTION ABDULLAH GPT")
-button=st.button;
+button=st.button("ASK");
 headers = {
     "Content-Type": "application/json",
 }
