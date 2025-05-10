@@ -1,5 +1,5 @@
 import requests;
-import streamlit;
+import streamlit as st;
 import json
 
 API_KEY = "AIzaSyAy8PSYddSJIQ0A7iaS0rxkwVv185z4UQI"
