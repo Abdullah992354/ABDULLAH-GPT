@@ -25,7 +25,7 @@ data = {
     ]
 }
 response = requests.post(API_URL, headers=headers, params=params, json=data)
-if button:
+if button or input:
     if response.status_code == 200:
         if input=="who make you" or input=="who is your owner" or input=="who made you" or input=="WHO MADE YOU" or input=="WHO IS YOUR OWNER" or input=="WHO MAKE YOU" or input=="tumah kis an banaya h" or input=="tumahe kis an banaya h" or input=="who created you" or input=="who design you" or input=="who give you knowledge":
             st.text("ABDULLAH MEMON S/O ALI RAZA IS THE MY OWNER and HE MADE ME");
