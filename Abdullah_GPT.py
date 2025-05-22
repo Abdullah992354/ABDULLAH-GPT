@@ -2,7 +2,7 @@ import requests;
 import streamlit as st;
 import json
 
-API_KEY = "AIzaSyD8ZyY6v_ayYRyFhviiikQ49fa9A9iDrpI"
+API_KEY = "AIzaSyDMl61UzsTpQLseCRfxMuKNS5iHQ0PNzRs"
 API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
 st.title("WELCOME TO THE ABDULLAH GPT")
 input=st.text_input("FEEL TO FREE ASK QUESTION ABDULLAH GPT")
