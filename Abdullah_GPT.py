@@ -3,7 +3,7 @@ import streamlit as st;
 import json
 
 API_KEY = "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"
-API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
+API_URL = "https://openrouter.ai/api/v1/chat/completions"
 st.title("WELCOME TO THE ABDULLAH GPT")
 input=st.text_input("FEEL TO FREE ASK QUESTION ABDULLAH GPT")
 button=st.button("ASK");
