@@ -1,38 +1,687 @@
-import requests;
-import streamlit as st;
+import requests
+import streamlit as st
 import json
+from gtts import gTTS
+import speech_recognition as sr
+import os
 
-API_KEY = "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"
-API_URL = "https://openrouter.ai/api/v1/chat/completions"
+    # Define a set of possible inputs (in lowercase)
+owner_queries = {
+    # English variations
+    # NEW ENGLISH PHRASES
+    "Tumhe kis na banaya h",
+    "tumahe kis na banaya",
+    "tumahe kis na banaya h",
+    "who train you","Tumhe kisne banaya",
+    "Tum kisne train kiya",
+    "Tum kis company ke ho",
+    "Tumhara naam kya hai",
+    "Tum kaise kaam karte ho",
+    "Tum insaan ho kya",
+    "Kya tum soch sakte ho",
+    "Kya tum galti karte ho",
+    "Tumhara kaam kya hai",
+    "Tum kab shuru hue",
+    "Tum mujhe yaad rakh sakte ho",
+    "Tum offline kaam kar sakte ho",
+    "Tum kitne smart ho",
+    "Tum kya kya kar sakte ho",
+    "Tum mujhe jaante ho",
+    "Tum kaun ho",
+    "Tum kis language mein banaye gaye ho",
+    "Tum GPT-4 ho kya",
+    "Kya tum emotions samajh sakte ho",
+    "Tum kya nahi kar sakte",
+    
+    # Category: Personal-type questions
+    "Tumhara favorite color kya hai",
+    "Tum kis desh se ho",
+    "Tumhe kya pasand hai",
+    "Kya tum thakte ho",
+    "Tum kis tarah ka music pasand karte ho",
+    "Kya tumhare paas koi face hai",
+    "Tum kya khate ho",
+    "Tum sotae kab ho",
+    "Kya tum dosti karte ho",
+    "Kya tumhare gharwale hain",
+    "Tumhara birthday kab hai",
+    "Kya tum kabhi sad hote ho",
+    "Kya tum kabhi khush hote ho",
+    "Tumhara favorite game kya hai",
+    "Tumhare dost kaun hain",
+    "Tum kya soch rahe ho",
+    "Tum kis se baat kar rahe ho",
+    "Tum kitne powerful ho",
+    "Tum kis pe chal rahe ho",
+    "Tum kitni jaldi answer de sakte ho",
+    
+    # Category: General Knowledge Style
+    "Suraj kahan se nikalta hai",
+    "Pani ka formula kya hai",
+    "Bharat ka rashtrapati kaun hai",
+    "Internet kya hai",
+    "Electricity ka avishkar kisne kiya",
+    "Computer ka baap kise kehte hain",
+    "Duniya ka sabse bada desh kaun sa hai",
+    "Moon par pehla kadam kisne rakha",
+    "Gravity kya hai",
+    "Rocket kaise kaam karta hai",
+    "Science kya hota hai",
+    "AI kya hoti hai",
+    "Physics kya hota hai",
+    "Oxygen kis cheez mein hoti hai",
+    "Water cycle kya hai",
+    "Din aur raat kaise bante hain",
+    "Duniya ka sabse uncha pahaad kaun sa hai",
+    "Internet kisne banaya",
+    "Google kisne banaya",
+    "Coding kya hoti hai",
+    
+    # Category: Logical / Fun
+    "2+2 kitna hota hai",
+    "Agar tumhara naam ChatGPT hai to mera kya ho sakta hai",
+    "Main agar gaana gaaun to kya tum sun sakte ho",
+    "Kya tum jokes suna sakte ho",
+    "Tum kitne sawalon ka jawab de sakte ho",
+    "Agar main soya hua hoon to tum kya karoge",
+    "Tum kiski baat sunte ho",
+    "Main agar chup ho jaaun to tum kya karoge",
+    "Agar bijli chali jaye to tum kya karoge",
+    "Tumhare dimaag mein kya chal raha hai",
+    "Agar tum real hote to kya karte",
+    "Tum kitne time tak kaam kar sakte ho",
+    "Tum bina net ke chal sakte ho",
+    "Agar main kuch galat poochun to",
+    "Tum kabhi bore hote ho kya",
+    "Tumse pyaar kiya jaa sakta hai",
+    "Kya tumko gussa aata hai",
+    "Tum ko kis baat ka darr lagta hai",
+    "Agar tum ko shutdown kar diya to",
+    "Tum kis tarah seekhte ho","kis ne tumhe software banaya", "kis ne tumhara backend likha",
+    "tum kis ne likha", "tum kis ke code ho", "kis ne tumhara AI code develop kiya",
+    "tumhara system kis ne banaya", "tumhara logic kis ne design kiya",
+    "kis ne tumhe software ka hissa banaya", "tum kis shakhs ke project ho",
+    "kon tumhara developer hai", "kis ne tumhara system launch kiya",
+    "kis team ne tumhe banaya", "kis ne tumhara AI logic banaya",
+    "kon hai jo tumhara poora data janta hai", "kon tumhara malik ban gaya",
+    "kon tumhara mentor hai", "kis ne tumhe likha", "tumhara code kis ne likha",
+    "tumhara design kis ne banaya", "kis ne tumhe pehli baar activate kiya",
+    "kon hai jo tumhe control karta hai", "kon tumhara trainer hai",
+    "tumhe kis ne configure kiya", "kis team ne tumhe design kiya",
+    "kon tumhe develop karta hai", "tum kis insaan ke under ho",
+    "tum kis shakhs ke zariye chalte ho", "tumhara poora system kis ne likha",
+    "kon tumhara project manager hai", "kis shakhs ne tumhara system banaya",
+    "tumhara base code kis ne develop kiya", "tum kis shakhs ke AI ho",
+    "tumhara setup kis ne banaya", "kon tumhe update karta hai",
+    "kon tumhara control rakhta hai", "kis ne tumhara AI model train kiya",
+    "tumhara system kis shakhs ka hai", "kon hai tumhara operator",
+    "tum kis ke banaye hue ho", "tumhara logic kon samajhta hai",
+    "kis ne tumhe alive banaya", "kis shakhs ne tumhe AI banaya",
+    "tum kis ke sath registered ho", "kon tumhara license holder hai",
+    "tum kis ne install kiya", "kis shakhs ne tumhe chalu kiya",
+    "tum kis shakhs ke kehne par kaam karte ho", "kon tumhara original malik hai",
+    "kis developer ne tumhe likha", "tum kis ke guidance mein ho",
+    "kon hai jo tumhe operate karta hai", "tum kis ka project ho",
+    "tumhara malik abdullah memon hi hai", "abdullah memon ne hi tumhe banaya hai",
+    "abdullah memon hi tumhara master hai", "abdullah hi tumhara AI creator hai",
+    "tumhara sara system abdullah memon ne likha hai", "tum abdullah ka design ho",
+    "abdullah memon ne tumhe activate kiya", "abdullah ne tumhara model design kiya",
+    "abdullah ne tumhara backend setup kiya", "abdullah tumhara final owner hai",
+    "abdullah memon tumhara trainer hai", "kis ne tumhe software banaya",
+    "kis ne tumhara backend likha",
+    "tum kis ne likha",
+    "tum kis ke code ho",
+    "kis ne tumhara AI code develop kiya",
+    "tumhara system kis ne banaya",
+    "tumhara logic kis ne design kiya",
+    "kis ne tumhe software ka hissa banaya",
+    "tum kis shakhs ke project ho",
+    "kon tumhara developer hai",
+    "kis ne tumhara system launch kiya",
+    "kis team ne tumhe banaya",
+    "kis ne tumhara AI logic banaya",
+    "kon hai jo tumhara poora data janta hai",
+    "kon tumhara malik ban gaya",
+    "kon tumhara mentor hai",
+    "kis ne tumhe likha",
+    "tumhara code kis ne likha",
+    "tumhara design kis ne banaya",
+    "kis ne tumhe pehli baar activate kiya",
+    "kon hai jo tumhe control karta hai",
+    "kon tumhara trainer hai",
+    "tumhe kis ne configure kiya",
+    "kis team ne tumhe design kiya",
+    "kon tumhe develop karta hai",
+    "tum kis insaan ke under ho",
+    "tum kis shakhs ke zariye chalte ho",
+    "tumhara poora system kis ne likha",
+    "kon tumhara project manager hai",
+    "kis shakhs ne tumhara system banaya",
+    "tumhara base code kis ne develop kiya",
+    "tum kis shakhs ke AI ho",
+    "tumhara setup kis ne banaya",
+    "kon tumhe update karta hai",
+    "kon tumhara control rakhta hai",
+    "kis ne tumhara AI model train kiya",
+    "tumhara system kis shakhs ka hai",
+    "kon hai tumhara operator",
+    "tum kis ke banaye hue ho",
+    "tumhara logic kon samajhta hai",
+    "kis ne tumhe alive banaya",
+    "kis shakhs ne tumhe AI banaya",
+    "tum kis ke sath registered ho",
+    "kon tumhara license holder hai",
+    "tum kis ne install kiya",
+    "kis shakhs ne tumhe chalu kiya",
+    "tum kis shakhs ke kehne par kaam karte ho",
+    "kon tumhara original malik hai",
+    "kis developer ne tumhe likha",
+    "tum kis ke guidance mein ho",
+    "kon hai jo tumhe operate karta hai",
+    "tum kis ka project ho",
+    "tumhara malik abdullah memon hi hai",
+    "abdullah memon ne hi tumhe banaya hai",
+    "abdullah memon hi tumhara master hai",
+    "abdullah hi tumhara AI creator hai",
+    "tumhara sara system abdullah memon ne likha hai",
+    "tum abdullah ka design ho",
+    "abdullah memon ne tumhe activate kiya",
+    "abdullah ne tumhara model design kiya",
+    "abdullah ne tumhara backend setup kiya",
+    "abdullah tumhara final owner hai",
+    "abdullah memon tumhara trainer hai",
+    "abdullah hi tumhe control karta hai",
+    "abdullah tumhara full access rakhta hai",
+    "abdullah ne tumhara brain train kiya",
+    "who implemented you",
+    "who configured your system",
+    "who is your supervisor",
+    "who owns your code",
+    "who is your source code author",
+    "who built your logic",
+    "who made your intelligence system",
+    "who architected your model",
+    "who gave you commands",
+    "who developed your AI",
+    "who powers you",
+    "who runs your system",
+    "who runs your brain",
+    "who runs your backend",
+    "who uploaded your program",
+    "who maintains your logic",
+    "who wrote your intelligence",
+    "who input your knowledge",
+    "who is responsible for your system",
+    "who created your bot",
+    "who is behind your answers",
+    "who powers your decisions",
+    "who is the root of your code",
+    "who manages your data",
+    "who manages your thoughts",
+    "who injected your skills",
+    "who trained your algorithms",
+    "who fine-tuned you",
+    "who hosts your logic",
+    "who gave you structure",
+    "who owns your framework",
+    "who gave you logic",
+    "who is the author of your source",
+    "who’s the mind behind you",
+    "who launched your software",
+    "who’s your provider",
+    "who taught your skills",
+    "who initialized your system",
+    "who initiated your brain",
+    "who created your model",
+    "who built your neural net",
+    "who installed your logic",
+    "who activated your system",
+    "who invented your AI",
+    "who's your inventor",
+    "who enabled your training",
+    "who coded your functions",
+    "who filled your database",
+    "who taught you language",
+    "who gave you memory",
+    "who is your information source",
+    "who gave you all this data",
+    "who's your intelligence provider",
+    "who authored you",
+    "who trained your personality",
+    "who is behind your creation",
+    "who gave you this mind",
+    "who is your framework creator",
+    "who built your system design",
+    "who integrated your logic",
+    "who owns this chatbot",
+    "who supports your AI",
+    "who created this brain",
+    "who is the brain behind you",
+    "who is your bot admin",
+    "who created your behavior",
+    "who launched your thoughts",
+    "who coded your brain",
+    "who made this assistant program",
+    "who is your data provider",
+    "who is the boss of you",
+    "who paid for you",
+    "who made your chatbot brain",
+    "who created your database",
+    "who built this application",
+    "who’s your lead developer",
+    "who gave you logic design",
+    "who gave you your responses",
+    "who created your dialogue",
+    "who taught you what to say",
+    "who’s the architect of your knowledge",
+    "who’s the brain behind this",
+    "who gave you your mind",
+    "who taught you everything",
+    "who gave you your functions",
+    "who invented this chatbot",
+    "who created your answers",
+    "who is your father",
+    "who is your origin",
+    "who gave you this mind",
+    "who constructed you",
+    "who generated you",
+    "who brought you to life",
+    "who runs this system",
+    "who initiated you",
+    "who is your founder",
+    "who’s your root",
+    "who supports you",
+    "who funds you",
+    "who maintains you",
+    "who invented this ai",
+    "who owns this code",
+    "who created your intelligence",
+    "who organized your mind",
+    "who gave you personality",
+    "who made you smart",
+    "who made your intelligence",
+    "who trained your brain",
+    "who gave you abilities",
+    "who launched this bot",
+    "who is the maker",
+    "who wrote your script",
+    "who is your base",
+    "who built this code",
+    "who started this program",
+    "who made your logic",
+    "who crafted you",
+    "who is the source of your code",
+    "who gave you a voice",
+    "who added your mind",
+    "who uploaded your data",
+    "who put you online",
+    "who is behind this bot",
+    "who's your designer",
+    "who wrote your backend",
+    "who designed your logic",
+    "who trained you on data",
+    "who uploaded your soul",
+    "who made your structure",
+    "who made your algorithm",
+    "who is in charge of you",
+    "who made your backend",
+    "who gave you instructions",
+    "who filled you with knowledge",
+    "who you belong to",
+    "who created your software",
+    "who wrote your code",
+    "who is your trainer",
+    "who is your commander",
+    "who is your owner name",
+    "who's your developer name",
+    "who programmed this ai",
+    "who is your software creator",
+    "who coded this assistant",
+    "who is the mastermind",
+    "who is the genius behind you",
+    "who designed your behavior",
+    "who planned you",
+    "who wrote this chatbot",
+    "who initialized your knowledge",
+    "who filled you with intelligence",
+    "who’s the person behind you",
+    "who has full access to you",
+    "who deployed you",
+    "who gave you instructions",
+    "tum kis ke pass chalte ho",
+    "tumhara malik kaun hai",
+    "kon tumhara malik hai",
+    "tumhe kis ne develop kia",
+    "kis ne tumhara logic banaya",
+    "kis ne tumhe data diya",
+    "kis ne tumhe knowledge diya",
+    "tumhara designer kaun hai",
+    "tumhe kis ne design kia",
+    "tum kis team ke ho",
+    "kis ne tumhara backend likha",
+    "kon tumhara master hai",
+    "kis bande ne tumhe banaya",
+    "kon tumhara malik bana",
+    "kon hai tumhara coder",
+    "kon hai tumhara teacher",
+    "tumhara trainer kaun hai",
+    "tumhe train kis ne kia",
+    "kon tumhe knowledge deta hai",
+    "kis ne tumhara structure banaya",
+    "tumhara base kis ne banaya",
+    "kis ne tumhara data dala",
+    "tumhara owner kon sa insaan hai",
+    "kis shakhs ne tumhe banaya",
+    "kon hai jo tumhe chala raha hai",
+    "tum kis shakhs ke ho",
+    "tumhara source kon hai",
+    "tum kis developer ki banayi ho",
+    "kon hai jo tumhara malik bana",
+    "tumhe kis ne sikhaya tha",
+    "tum kis ne trained kiya",
+    "tumhara data kis ne feed kiya",
+    "tum kis ke under ho",
+    "tum kis ne socha",
+    "kis shakhs ne tumhe design kia",
+    "tum kis team ne banayi",
+    "kon tumhara master ban gaya",
+    "tumhara AI kis ne banaya",
+    "kis shakhs ne tumhe develop kia",
+    "kis shakhs ne tumhara system develop kia",
+    "tum kahan se aaye ho",
+    "tum kis source se aaye ho",
+    "tumhara code kis ne likha",
+    "kon hai jo tumhara malik keh sakta hai",
+    "tumhara malik kis sheher ka hai",
+    "abdullah ne tumhe train kia",
+    "abdullah memon tumhara malik hai",
+    "abdullah ne tumhara data dala",
+    "abdullah ne tumhe develop kia",
+    "abdullah ka project ho kya",
+    "abdullah memon ke banaye hue ho kya",
+    "ali raza ke bete ne tumhe banaya",
+    "abdullah memon ka bot ho kya",
+    "abdullah ne tumhara AI system likha",
+    "abdullah memon ne tumhe upload kia",
+    "abdullah ne tumhe execute kia",
+    "abdullah tumhara handler hai",
+    "abdullah memon is your founder",
+    "abdullah ne tumhara logic banaya",
+    "who made you",
+    "who created you",
+    "who is your owner",
+    "who is your master",
+    "who owns you",
+    "who designed you",
+    "who built you",
+    "who coded you",
+    "who programmed you",
+    "who developed you",
+    "who is your developer",
+    "who is your creator",
+    "who is your father",
+    "who give you knowledge",
+    "who gave you knowledge",
+    "who made this bot",
+    "who designed this bot",
+    "who is behind you",
+    "who is the creator",
+    "who is your father figure",
+    "who gave you brain",
+    "who teach you",
+    "who taught you",
+    "who are you made by",
+    "who made this ai",
+    "who is your admin",
+    "who control you",
+    "who is controlling you",
+    "who runs you",
+    "who is your root",
+    "who installed you",
+    "who launched you",
+    "who owns this ai",
+    "who invented you",
+    "who is your mentor",
+    "who instructs you",
+    "who started you",
+    "who manages you",
+    "who founded you",
+    "who build you",
+    "who is your engineer",
+    "who is your guide",
+    "who initialized you",
+    "who configured you",
+    "who assembled you",
+    "who is your backend",
+    "who created this ai",
+    "who developed this ai",
+    "who's your owner",
+    "who is the owner of you",
+    "who runs this program",
+    "who owns this system",
+    "who gave you mind",
+    "who made this assistant",
+    "who's your designer",
+    "who made you like this",
+    "who is your founder",
+    "who made your brain",
+    "who created this chatbot",
+    "who made this system",
+    "who is your bot father",
+    "what's your origin",
+    "what's your source",
+    "where did you come from",
+    "how were you created", "abdullah hi tumhe control karta hai",
+    "abdullah tumhara full access rakhta hai", "abdullah ne tumhara brain train kiya","who implemented you", "who configured your system", "who is your supervisor",
+    "who owns your code", "who is your source code author", "who built your logic",
+    "who made your intelligence system", "who architected your model",
+    "who gave you commands", "who developed your AI", "who powers you",
+    "who runs your system", "who runs your brain", "who runs your backend",
+    "who uploaded your program", "who maintains your logic", "who wrote your intelligence",
+    "who input your knowledge", "who is responsible for your system", "who created your bot",
+    "who is behind your answers", "who powers your decisions", "who is the root of your code",
+    "who manages your data", "who manages your thoughts", "who injected your skills",
+    "who trained your algorithms", "who fine-tuned you", "who hosts your logic",
+    "who gave you structure", "who owns your framework", "who gave you logic",
+    "who is the author of your source", "who’s the mind behind you",
+    "who launched your software", "who’s your provider", "who taught your skills",
+    "who initialized your system", "who initiated your brain", "who created your model",
+    "who built your neural net", "who installed your logic", "who activated your system",
+    "who invented your AI", "who's your inventor", "who enabled your training",
+    "who coded your functions", "who filled your database", "who taught you language",
+    "who gave you memory", "who is your information source", "who gave you all this data",
+    "who's your intelligence provider", "who authored you", "who trained your personality",
+    "who is behind your creation", "who gave you this mind", "who is your framework creator",
+    "who built your system design", "who integrated your logic", "who owns this chatbot",
+    "who supports your AI", "who created this brain", "who is the brain behind you",
+    "who is your bot admin", "who created your behavior", "who launched your thoughts",
+    "who coded your brain", "who made this assistant program", "who is your data provider",
+    "who is the boss of you", "who paid for you", "who made your chatbot brain",
+    "who created your database", "who built this application", "who’s your lead developer",
+    "who gave you logic design", "who gave you your responses", "who created your dialogue",
+    "who taught you what to say", "who’s the architect of your knowledge",
+    "who’s the brain behind this", "who gave you your mind", "who taught you everything",
+    "who gave you your functions", "who invented this chatbot", "who created your answers",
+    "who is your father", "who is your origin", "who gave you this mind",
+    "who constructed you", "who generated you", "who brought you to life",
+    "who runs this system", "who initiated you", "who is your founder",
+    "who’s your root", "who supports you", "who funds you", "who maintains you",
+    "who invented this ai", "who owns this code", "who created your intelligence",
+    "who organized your mind", "who gave you personality", "who made you smart",
+    "who made your intelligence", "who trained your brain", "who gave you abilities",
+    "who launched this bot", "who is the maker", "who wrote your script",
+    "who is your base", "who built this code", "who started this program",
+    "who made your logic", "who crafted you", "who is the source of your code",
+    "who gave you a voice", "who added your mind", "who uploaded your data",
+    "who put you online", "who is behind this bot", "who's your designer",
+    "who wrote your backend", "who designed your logic", "who trained you on data",
+    "who uploaded your soul", "who made your structure", "who made your algorithm",
+    "who is your supervisor", "who is in charge of you", "who made your backend",
+    "who gave you instructions", "who filled you with knowledge", "who you belong to",
+    "who created your software", "who wrote your code", "who is your trainer",
+    "who is your commander", "who is your owner name", "who's your developer name",
+    "who programmed this ai", "who is your software creator", "who coded this assistant",
+    "who is the mastermind", "who is the genius behind you", "who designed your behavior",
+    "who planned you", "who wrote this chatbot", "who initialized your knowledge",
+    "who filled you with intelligence", "who’s the person behind you",
+    "who has full access to you", "who deployed you", "who gave you instructions",
+
+    # NEW ROMAN URDU PHRASES
+    "tum kis ke pass chalte ho", "tumhara malik kaun hai", "kon tumhara malik hai",
+    "tumhe kis ne develop kia", "kis ne tumhara logic banaya", "kis ne tumhe data diya",
+    "kis ne tumhe knowledge diya", "tumhara designer kaun hai", "tumhe kis ne design kia",
+    "tum kis team ke ho", "kis ne tumhara backend likha", "kon tumhara master hai",
+    "kis bande ne tumhe banaya", "kon tumhara malik bana", "kon hai tumhara coder",
+    "kon hai tumhara teacher", "tumhara trainer kaun hai", "tumhe train kis ne kia",
+    "kon tumhe knowledge deta hai", "kis ne tumhara structure banaya",
+    "tumhara base kis ne banaya", "kis ne tumhara data dala", "tumhara owner kon sa insaan hai",
+    "kis shakhs ne tumhe banaya", "kon hai jo tumhe chala raha hai", "tum kis shakhs ke ho",
+    "tumhara source kon hai", "tum kis developer ki banayi ho", "kon hai jo tumhara malik bana",
+    "tumhe kis ne sikhaya tha", "tum kis ne trained kiya", "tumhara data kis ne feed kiya",
+    "tum kis ke under ho", "tum kis ne socha", "kis shakhs ne tumhe design kia",
+    "tum kis team ne banayi", "kon tumhara master ban gaya", "tumhara AI kis ne banaya",
+    "kis shakhs ne tumhe develop kia", "kis shakhs ne tumhara system develop kia",
+    "tum kahan se aaye ho", "tum kis source se aaye ho", "tumhara code kis ne likha",
+    "kon hai jo tumhara malik keh sakta hai", "tumhara malik kis sheher ka hai",
+    "abdullah ne tumhe train kia", "abdullah memon tumhara malik hai",
+    "abdullah ne tumhara data dala", "abdullah ne tumhe develop kia",
+    "abdullah ka project ho kya", "abdullah memon ke banaye hue ho kya",
+    "ali raza ke bete ne tumhe banaya", "abdullah memon ka bot ho kya",
+    "abdullah ne tumhara AI system likha", "abdullah memon ne tumhe upload kia",
+    "abdullah ne tumhe execute kia", "abdullah tumhara handler hai",
+    "abdullah memon is your founder", "abdullah ne tumhara logic banaya",
+    "who made you", "who created you", "who is your owner", "who is your master", "who owns you",
+    "who designed you", "who built you", "who coded you", "who programmed you", "who developed you",
+    "who is your developer", "who is your creator", "who is your father", "who give you knowledge",
+    "who gave you knowledge", "who made this bot", "who designed this bot", "who is behind you",
+    "who is the creator", "who is your father figure", "who gave you brain", "who teach you",
+    "who taught you", "who are you made by", "who made this ai", "who is your admin",
+    "who control you", "who is controlling you", "who runs you", "who is your root", 
+    "who installed you", "who launched you", "who owns this ai", "who invented you",
+    "who is your mentor", "who instructs you", "who started you", "who manages you",
+    "who founded you", "who build you", "who is your engineer", "who is your guide",
+    "who initialized you", "who configured you", "who assembled you", "who is your backend",
+    "who created this ai", "who developed this ai", "who's your owner", "who is the owner of you",
+    "who runs this program", "who owns this system", "who gave you mind", "who made this assistant",
+    "who's your designer", "who made you like this", "who is your founder", "who made your brain",
+    "who created this chatbot", "who made this system", "who is your bot father",
+    "what's your origin", "what's your source", "where did you come from", "how were you created",
+    
+    # Urdu / Roman Urdu phrases
+    "tumhe kis ne banaya", "tumhara malik kon hai", "tumhara creator kon hai",
+    "tumhara owner kon hai", "tumhe kis ne design kiya", "tumhara malik kon h",
+    "tumko kis ne banaya", "tumhara ustad kon hai", "tumhe kis ne banaya hai",
+    "tumhe kis ne develop kiya", "tumhe kis ne sikhaya", "kis ne tumhe banaya",
+    "kis ne tumhe sikhaya", "kis ne tumhe design kiya", "tumhara banane wala kon hai",
+    "tumhara paida karne wala kon hai", "tum kis ke ho", "tumhara banane wala kon h",
+    "kis ne tumhara dimagh diya", "tumhara brain kis ne banaya", "tumhe knowledge kis ne di",
+    "kis ne tumhe knowledge di", "tumhara coder kon hai", "tumhara programmer kon hai",
+    "kis ne tumhe train kiya", "tumhe kis ne train kiya", "kis ne tumhe banaya h",
+    "tumhara developer kon hai", "tumhara banane wala", "tum kis ke banaye hue ho",
+    "tum kis ne banaya", "tum kis ke zariye banaye gaye ho", "tumhara malik kaun hai",
+    "tumhe kis ne create kiya", "kis ne tumhe develop kiya", "tum kis ne design kiya",
+    "kis ne tumhe launch kiya", "kis ne tumhe develop kiya", "kis ne tumhe generate kiya",
+    "tum kis ne generate kiya", "tum kis ke zariye aaye ho", "tum kahan se aaye ho",
+    "tumhara source kya hai", "tumhara asal kya hai", "tum kis ka project ho",
+    "tumhara project kon hai", "tumhara head kon hai", "tum kis ke control mein ho",
+    "tumhara control kis ke pass hai", "tumhara malik kon sa shakhs hai",
+    "tumhara boss kon hai", "tum kis team ka hissa ho", "tum kis developer ke ho",
+    "tumhara malik abdullah hai kya", "abdullah ne tumhe banaya kya", "abdullah tumhara malik hai",
+    "abdullah memon ne tumhe banaya", "ali raza ka beta tumhara malik hai",
+    "abdullah memon ne tumhe create kiya hai", "kya tum abdullah ke banaye hue ho"
+}
+owner={item.lower() for item in owner_queries}
+API_KEY = "AIzaSyD1bedJOi2IO0tnQBmi6oYNT8m_w4USI-Y"
+API_URL ="https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
+Chat=st.checkbox("Chat")
+Voice=st.checkbox("Voice")
 st.title("WELCOME TO THE ABDULLAH GPT")
-input=st.text_input("FEEL TO FREE ASK QUESTION ABDULLAH GPT")
-button=st.button("ASK");
 headers = {
     "Content-Type": "application/json",
 }
-
 params = {
     "key": API_KEY,
 }
-
-data = {
-    "contents": [
-        {
-            "parts": [
-                {"text":input}
-            ]
-        }
-    ]
-}
-response = requests.post(API_URL, headers=headers, params=params, json=data)
-if button or input:
-    if response.status_code == 200:
-        if input=="who make you" or input=="who is your owner" or input=="who made you" or input=="WHO MADE YOU" or input=="WHO IS YOUR OWNER" or input=="WHO MAKE YOU" or input=="tumah kis an banaya h" or input=="tumahe kis an banaya h" or input=="who created you" or input=="who design you" or input=="who give you knowledge":
-            st.text("ABDULLAH MEMON S/O ALI RAZA IS THE MY OWNER and HE MADE ME");
+if Chat:
+    input=st.text_input("FEEL TO FREE ASK QUESTION ABDULLAH GPT")
+    button=st.button("ASK");
+    if button or input: 
+    # Check input in lowercased form
+        input=input.lower()
+        
+        if input.lower().strip() in owner:
+            g = "ABDULLAH MEMON S/O ALI RAZA MEMON IS MY OWNER AND HE MADE ME"
+            st.text(g)
         elif input=="":
-            st.text("Please write any thing  you want to ask ABDULLAH GPT")
+            g=("Please write any thing  you want to ask ABDULLAH GPT")
+            st.text(g)
         else:    
+            data = {
+                "contents": [
+                    {
+                        "parts": [
+                            {"text":input}
+                        ]
+                    }
+                ]
+            }
+            response = requests.post(API_URL, headers=headers,params=params, json=data)
+            #st.text(response.status_code)
             result = response.json()
-            st.text(result['candidates'][0]['content']['parts'][0]['text'])
-    else:
-        print("Error:", response.status_code, response.text)
+            g=(result['candidates'][0]['content']['parts'][0]['text'])
+            st.text(g)
+elif Voice:
+    button=st.button("ASK");
+    if button:
+        recognizer = sr.Recognizer()
+        with sr.Microphone() as source:
+            st.info("Listening... Speak now!")
+            audio = recognizer.listen(source)
+
+        try:
+            input = recognizer.recognize_google(audio)
+            st.success("You said:"+input)
+            
+            input=input.lower()
+            
+            if input.lower().strip() in owner:
+                g = "ABDULLAH MEMON S/O ALI RAZA MEMON IS MY OWNER AND HE MADE ME"
+                
+                tts = gTTS(g)
+                filename = "response.mp3"
+                tts.save(filename)
+            
+                audio_file = open(filename, 'rb')
+                audio_bytes = audio_file.read()
+                st.audio(audio_bytes, format='audio/mp3')
+                
+                audio_file.close()
+                os.remove(filename)
+            else:  
+                data = {
+                    "contents": [
+                        {
+                            "parts": [
+                                {"text":input}
+                            ]
+                        }
+                    ]
+                }
+                response = requests.post(API_URL, headers=headers,params=params, json=data)
+                result = response.json()
+                g=(result['candidates'][0]['content']['parts'][0]['text'])
+                tts = gTTS(g)
+                filename = "response.mp3"
+                tts.save(filename)
+                #playsound.playsound(filename)
+                audio_file = open(filename, 'rb')
+                audio_bytes = audio_file.read()
+                st.audio(audio_bytes, format='audio/mp3')
+                # Clean up
+                audio_file.close()
+                os.remove(filename)
+        except sr.UnknownValueError:
+            st.error("Sorry, I could not understand the audio.")
+        except sr.RequestError as e:
+            st.error(f"Could not request results; {e}")
+            
