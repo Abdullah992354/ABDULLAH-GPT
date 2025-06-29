@@ -593,9 +593,10 @@ owner_queries = {
 owner={item.lower() for item in owner_queries}
 API_KEY = "AIzaSyD1bedJOi2IO0tnQBmi6oYNT8m_w4USI-Y"
 API_URL ="https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
+
+st.title("WELCOME TO THE 👑PRINCE👑 ABDULLAH😎 GPT")
 Chat=st.checkbox("Chat")
 Voice=st.checkbox("Voice")
-st.title("WELCOME TO THE ABDULLAH GPT")
 headers = {
     "Content-Type": "application/json",
 }
