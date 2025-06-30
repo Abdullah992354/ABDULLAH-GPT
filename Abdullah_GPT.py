@@ -594,16 +594,14 @@ owner={item.lower() for item in owner_queries}
 API_KEY = "AIzaSyD1bedJOi2IO0tnQBmi6oYNT8m_w4USI-Y"
 API_URL ="https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
 
-st.title("WELCOME TO THE 👑PRINCE👑 ABDULLAH😎 GPT")
-Chat=st.checkbox("Chat")
-Voice=st.checkbox("Voice")
+st.title("WELCOME TO THE CHAT BOT🤖 GPT")
 headers = {
     "Content-Type": "application/json",
 }
 params = {
     "key": API_KEY,
 }
-if Chat:
+if True:
     input=st.text_input("FEEL TO FREE ASK QUESTION ABDULLAH GPT")
     button=st.button("ASK");
     if button or input: 
@@ -631,58 +629,3 @@ if Chat:
             result = response.json()
             g=(result['candidates'][0]['content']['parts'][0]['text'])
             st.text(g)
-elif Voice:
-    button=st.button("ASK");
-    if button:
-        recognizer = sr.Recognizer()
-        with sr.Microphone() as source:
-            st.info("Listening... Speak now!")
-            audio = recognizer.listen(source)
-
-        try:
-            input = recognizer.recognize_google(audio)
-            st.success("You said:"+input)
-            
-            input=input.lower()
-            
-            if input.lower().strip() in owner:
-                g = "ABDULLAH MEMON S/O ALI RAZA MEMON IS MY OWNER AND HE MADE ME"
-                
-                tts = gTTS(g)
-                filename = "response.mp3"
-                tts.save(filename)
-            
-                audio_file = open(filename, 'rb')
-                audio_bytes = audio_file.read()
-                st.audio(audio_bytes, format='audio/mp3')
-                
-                audio_file.close()
-                os.remove(filename)
-            else:  
-                data = {
-                    "contents": [
-                        {
-                            "parts": [
-                                {"text":input}
-                            ]
-                        }
-                    ]
-                }
-                response = requests.post(API_URL, headers=headers,params=params, json=data)
-                result = response.json()
-                g=(result['candidates'][0]['content']['parts'][0]['text'])
-                tts = gTTS(g)
-                filename = "response.mp3"
-                tts.save(filename)
-                #playsound.playsound(filename)
-                audio_file = open(filename, 'rb')
-                audio_bytes = audio_file.read()
-                st.audio(audio_bytes, format='audio/mp3')
-                # Clean up
-                audio_file.close()
-                os.remove(filename)
-        except sr.UnknownValueError:
-            st.error("Sorry, I could not understand the audio.")
-        except sr.RequestError as e:
-            st.error(f"Could not request results; {e}")
-            
