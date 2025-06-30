@@ -596,7 +596,7 @@ API_URL ="https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-fla
 
 st.title("WELCOME TO THE CHAT BOT🤖 GPT")
 st.text("Project of GCT COLLEGE DEP: OF C.I.T")
-st.text("made by ABDULLAH , ANNUS, SADDAM ,ABDUL SAMI")
+st.text("made by ABDULLAH , ANNUS , SADDAM , ABDUL SAMI")
 headers = {
     "Content-Type": "application/json",
 }
@@ -611,7 +611,7 @@ if True:
         input=input.lower()
         
         if input.lower().strip() in owner:
-            g = "ABDULLAH MEMON S/O ALI RAZA MEMON IS MY OWNER AND HE MADE ME"
+            g = "GCT STUDENTS ARE: ABDULLAH , ANNUS , SADDAM , ABDUL SAMI THEY ARE MY OWNERS AND THEY MADE ME"
             st.text(g)
         elif input=="":
             g=("Please write any thing  you want to ask ABDULLAH GPT")
