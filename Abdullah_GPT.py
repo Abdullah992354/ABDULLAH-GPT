@@ -5,7 +5,7 @@ from gtts import gTTS
 import speech_recognition as sr
 import os
 
-    # Define a set of possible inputs (in lowercase)
+   
 owner_queries = {
     # English variations
     # NEW ENGLISH PHRASES
