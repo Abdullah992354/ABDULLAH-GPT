@@ -595,6 +595,8 @@ API_KEY = "AIzaSyD1bedJOi2IO0tnQBmi6oYNT8m_w4USI-Y"
 API_URL ="https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
 
 st.title("WELCOME TO THE CHAT BOT🤖 GPT")
+st.text("Project of GCT COLLEGE DEP: OF C.I.T")
+st.text("made by ABDULLAH , ANNUS, SADDAM ,ABDUL SAMI")
 headers = {
     "Content-Type": "application/json",
 }
