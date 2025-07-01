@@ -1,11 +1,10 @@
 import requests
 import streamlit as st
+from PIL import Image
 import json
 from gtts import gTTS
 import speech_recognition as sr
 import os
-
-   #
 owner_queries = {
     # English variations
     # NEW ENGLISH PHRASES
@@ -590,44 +589,311 @@ owner_queries = {
     "abdullah memon ne tumhe banaya", "ali raza ka beta tumhara malik hai",
     "abdullah memon ne tumhe create kiya hai", "kya tum abdullah ke banaye hue ho"
 }
+medical_keywords = {
+    "fever": "Aap ka temperature kitna hai? Kya sardardi, thakan ya kisi aur symptom ka izafa hua hai?",
+    "headache": "Sar dard kis type ka hai? Kya yeh stress ya tension se related ho sakta hai?",
+    "cough": "Kya khansi sukhkhi hai ya balgham wali? Kab se ho rahi hai?",
+    "cold": "Naak band hai? Kya bukhar bhi hai? Garam pani aur rest zaroori hai.",
+    "vomiting": "Kya aap kuch khas khane ke baad ulti kar rahe hain? Kab se ho rahi hai?",
+    "diarrhea": "Dast kis intensity ke hain? Pani ya khana barabar le rahe hain?",
+    "high blood pressure": "BP kaunse level tak gaya hai? Kya pehle se medication chal rahi hai?",
+    "low blood pressure": "Kya chakkar ya kamzori mehsoos ho rahi hai? Pani aur salt intake dekhiye.",
+    "fatigue": "Kya yeh rozana mehsoos hoti hai ya sirf kuch dino se? Sone ka schedule kaisa hai?",
+    "chest pain": "Dard kis area mein hai? Kya yeh left side mein hai aur breathing mein mushkil hoti hai?","fever": "Bukhar viral ya bacterial infection ki wajah se ho sakta hai. Agar 3 din se zyada rahe toh doctor se milna chahiye.",
+    "diabetes": "Diabetes ek metabolic disorder hai jisme sugar level badh jata hai. Diet, exercise aur dawaiyon se control kiya jata hai.",
+    "hypertension": "High blood pressure kaafi serious ho sakta hai agar control na ho. Namak kam karein aur regular BP check karwayein.",
+    "chest pain": "Seene mein dard agar left side mein ho aur saans lene mein dikkat ho toh turant hospital jayein.",
+    "vomiting": "Ulti food poisoning, viral ya gastric issue ki wajah se ho sakti hai. ORS lena madadgar hai.","headache": "Sar dard stress, dehydration, ya migraine ki wajah se ho sakta hai. Pani piyen aur aaram karein.",
+    "cough": "Khansi viral infection, allergy ya asthma ka lakshan ho sakti hai. Agar khansi zyada din tak rahe toh check-up karwana chahiye.",
+    "sore throat": "Gale mein kharash ya infection ho sakti hai. Garam paani se gargle karein aur zyada thanda na lein.",
+    "diarrhea": "Pet kharab ho gaya hai. Hydration ka khayal rakhein. ORS solution piyen.",
+    "vomiting": "Ulti food poisoning, viral ya gastric problem ki wajah se ho sakti hai.",
+    "cold": "Zukhaam viral infection ka lakshan hai. Rest lein aur pani zyada piyen.",
+    "chest pain": "Seene mein dard serious ho sakta hai. Agar yeh pressure type dard hai ya saans mein dikkat ho rahi hai toh turant doctor se milen.",
+    "skin rash": "Skin par daane allergy ya infection ho sakti hai. Kya aapko itching bhi ho rahi hai?",
+    "back pain": "Peeche dard zyadah baithne, uthne ka tareeqa, ya kisi injury ki wajah se ho sakta hai.",
+    "asthma": "Do you experience difficulty in breathing, especially during exertion or at night? Asthma can be triggered by allergens, pollution, or physical activity. Inhaler use and medical advice are important.",
+    "allergy": "What kind of allergy is it – food, dust, or seasonal? Are you experiencing sneezing, rashes, or breathing difficulty? Try to identify and avoid the trigger.",
+    "constipation": "Since when are you facing constipation? Are you eating enough fiber and drinking enough water?",
+    "menstrual pain": "Is the pain mild or severe? Does it affect your daily routine? Menstrual pain is common but if it's excessive, consult a gynecologist.",
+    "eye pain": "Is there redness or discharge? Eye pain can be due to infection, strain, or dryness.",
+    "earache": "Is the pain inside the ear or outside? Any pus or hearing loss? Ear infection might be the cause.",
+    "insomnia": "Since when are you unable to sleep? Do you feel anxious or restless at night?",
+    "anxiety": "Are you feeling nervous or panicked often? Anxiety may need lifestyle changes or professional help.",
+    "depression": "Do you feel low or hopeless often? Loss of interest in daily activities can be a sign of depression. Talking to a mental health professional helps.",
+    "nausea": "Do you feel like vomiting all the time or just after eating? Nausea can be due to gastric problems or infection.",
+    "dizziness": "Do you feel the room is spinning? It could be due to low blood pressure, dehydration, or inner ear issues.",
+    "urine infection": "Do you feel burning while urinating? Is the urine cloudy or smelly? You might have a UTI.",
+    "acidity": "Do you feel burning in the chest or stomach? Acidity can be due to spicy food, irregular meals, or stress.",
+    "joint pain": "Which joint is painful? Is there swelling or stiffness? It could be arthritis or injury-related.",
+    "thyroid": "Are you gaining or losing weight suddenly? Feeling tired or anxious? Thyroid problems can affect metabolism.",    "itching": "Which part of the body is itching? Is there any redness, swelling, or rash? Itching can be due to allergy, dryness, or infection.",
+    "bruises": "How did you get the bruise? Is it painful or spreading? Apply ice and rest the area.",
+    "nosebleed": "How often does your nose bleed? Does it happen after sneezing or in dry weather? Pinch the nose and lean forward slightly.",
+    "dehydration": "Are you feeling thirsty, dizzy, or tired? Is your urine dark? These are signs of dehydration. Drink water or ORS.",
+    "heartburn": "Do you feel burning in the chest after meals? It could be acid reflux. Avoid spicy or fried foods.",
+    "palpitations": "Do you feel your heart beating fast or irregularly? Palpitations can be due to anxiety, caffeine, or heart issues.",
+    "swelling": "Where is the swelling? Is it sudden or developing over time? Swelling can be due to injury, infection, or fluid retention.",
+    "numbness": "Which body part feels numb? Is it continuous or comes and goes? Numbness could be nerve-related.",
+    "shortness of breath": "Are you having difficulty breathing even while resting? It can be serious. Please consult a doctor immediately.",
+    "weight loss": "Are you losing weight without trying? It can be due to thyroid, diabetes, or other health conditions.",
+    "weight gain": "Have you gained weight recently without any diet changes? It can be related to thyroid, hormones, or water retention.",
+    "burn": "How big is the burn area? Is the skin blistered or red? For small burns, wash with cool water and apply ointment.",
+    "injury": "What kind of injury is it — cut, sprain, or fracture? Clean the wound if bleeding, and rest the injured part.",
+    "fracture": "Is there swelling, severe pain, or inability to move? You may need an X-ray. Immobilize the area and seek help.",
+    "pregnancy": "Are you experiencing missed periods or nausea? Have you taken a pregnancy test?",
+    "gas": "Do you feel bloated or have frequent burping? Gas can be due to diet or digestion issues. Avoid fried and spicy foods.",
+    "indigestion": "Do you feel heaviness after eating? Try eating small, frequent meals and avoid overeating.",
+    "piles": "Do you have pain or bleeding while passing stool? Piles can be managed with a high-fiber diet and hydration.",
+    "kidney stones": "Do you have severe back pain or pain while urinating? Kidney stones need medical evaluation.",
+    "jaundice": "Is there yellowing of eyes or skin? It may be liver-related. Get a liver function test done.",
+    "hepatitis": "Have you been diagnosed with any form of hepatitis? It affects the liver and needs medical care.",
+    "flu": "Are you experiencing chills, fever, body ache, or fatigue? Flu is contagious and needs rest and hydration.",
+    "migraine": "Is the headache one-sided with nausea or light sensitivity? Migraines can be triggered by stress or lack of sleep.",
+    "PCOS": "Are your periods irregular or do you have acne and weight gain? PCOS is a hormonal issue that needs lifestyle changes.",
+    "infertility": "Are you trying to conceive but facing difficulties? Infertility can have many causes. Medical consultation is advised.",
+    "tonsillitis": "Is your throat painful with difficulty swallowing? You may have tonsillitis. Warm salt water gargles can help.",
+
+
+    
+    # ... yahan se aap additional 340+ terms add kar sakte ho
+}
+medical_voice = {
+    "fever": "What is your temperature? Has there been an increase in headache, fatigue, or any other symptoms? Fever can be due to viral or bacterial infection. If it lasts more than 3 days, you should see a doctor.",
+    "headache": "What type of headache is it? Could it be related to stress or tension? Headache can be due to stress, dehydration, or migraine. Drink water and get some rest.",
+    "cough": "Is the cough dry or with phlegm? How long have you had it? Cough can be a sign of viral infection, allergy, or asthma. If it persists for many days, get a check-up.",
+    "cold": "Is your nose blocked? Do you also have a fever? Warm water and rest are important. Cold is a symptom of viral infection. Take rest and drink plenty of water.",
+    "vomiting": "Are you vomiting after eating something specific? Since when? Vomiting can be due to food poisoning, viral or gastric issues. ORS can be helpful.",
+    "diarrhea": "What is the intensity of the diarrhea? Are you maintaining fluid and food intake? The stomach is upset. Stay hydrated and drink ORS solution.",
+    "high blood pressure": "What level has your blood pressure reached? Are you already on medication? High blood pressure can be serious if not controlled. Reduce salt and check BP regularly.",
+    "low blood pressure": "Are you feeling dizzy or weak? Monitor your water and salt intake.",
+    "fatigue": "Do you feel this daily or just for the past few days? What is your sleep schedule like?",
+    "chest pain": "Where exactly is the pain in your chest? Is it on the left side and do you have trouble breathing? Chest pain can be serious. If it feels like pressure or affects breathing, consult a doctor immediately.",
+    "diabetes": "Diabetes is a metabolic disorder where sugar levels increase. It is managed through diet, exercise, and medication.",
+    "hypertension": "High blood pressure can be very serious if not controlled. Reduce salt intake and check BP regularly.",
+    "sore throat": "There may be irritation or infection in the throat. Gargle with warm water and avoid cold items.",
+    "skin rash": "Rashes on the skin may be due to allergy or infection. Are you also experiencing itching?",
+    "back pain": "Back pain may be due to prolonged sitting, poor posture, or injury.",
+    "asthma": "Do you experience difficulty in breathing, especially during exertion or at night? Asthma can be triggered by allergens, pollution, or physical activity. Inhaler use and medical advice are important.",
+    "allergy": "What kind of allergy is it – food, dust, or seasonal? Are you experiencing sneezing, rashes, or breathing difficulty? Try to identify and avoid the trigger.",
+    "constipation": "Since when are you facing constipation? Are you eating enough fiber and drinking enough water?",
+    "menstrual pain": "Is the pain mild or severe? Does it affect your daily routine? Menstrual pain is common but if it's excessive, consult a gynecologist.",
+    "eye pain": "Is there redness or discharge? Eye pain can be due to infection, strain, or dryness.",
+    "earache": "Is the pain inside the ear or outside? Any pus or hearing loss? Ear infection might be the cause.",
+    "insomnia": "Since when are you unable to sleep? Do you feel anxious or restless at night?",
+    "anxiety": "Are you feeling nervous or panicked often? Anxiety may need lifestyle changes or professional help.",
+    "depression": "Do you feel low or hopeless often? Loss of interest in daily activities can be a sign of depression. Talking to a mental health professional helps.",
+    "nausea": "Do you feel like vomiting all the time or just after eating? Nausea can be due to gastric problems or infection.",
+    "dizziness": "Do you feel the room is spinning? It could be due to low blood pressure, dehydration, or inner ear issues.",
+    "urine infection": "Do you feel burning while urinating? Is the urine cloudy or smelly? You might have a UTI.",
+    "acidity": "Do you feel burning in the chest or stomach? Acidity can be due to spicy food, irregular meals, or stress.",
+    "joint pain": "Which joint is painful? Is there swelling or stiffness? It could be arthritis or injury-related.",
+    "thyroid": "Are you gaining or losing weight suddenly? Feeling tired or anxious? Thyroid problems can affect metabolism.",    "itching": "Which part of the body is itching? Is there any redness, swelling, or rash? Itching can be due to allergy, dryness, or infection.",
+    "bruises": "How did you get the bruise? Is it painful or spreading? Apply ice and rest the area.",
+    "nosebleed": "How often does your nose bleed? Does it happen after sneezing or in dry weather? Pinch the nose and lean forward slightly.",
+    "dehydration": "Are you feeling thirsty, dizzy, or tired? Is your urine dark? These are signs of dehydration. Drink water or ORS.",
+    "heartburn": "Do you feel burning in the chest after meals? It could be acid reflux. Avoid spicy or fried foods.",
+    "palpitations": "Do you feel your heart beating fast or irregularly? Palpitations can be due to anxiety, caffeine, or heart issues.",
+    "swelling": "Where is the swelling? Is it sudden or developing over time? Swelling can be due to injury, infection, or fluid retention.",
+    "numbness": "Which body part feels numb? Is it continuous or comes and goes? Numbness could be nerve-related.",
+    "shortness of breath": "Are you having difficulty breathing even while resting? It can be serious. Please consult a doctor immediately.",
+    "weight loss": "Are you losing weight without trying? It can be due to thyroid, diabetes, or other health conditions.",
+    "weight gain": "Have you gained weight recently without any diet changes? It can be related to thyroid, hormones, or water retention.",
+    "burn": "How big is the burn area? Is the skin blistered or red? For small burns, wash with cool water and apply ointment.",
+    "injury": "What kind of injury is it — cut, sprain, or fracture? Clean the wound if bleeding, and rest the injured part.",
+    "fracture": "Is there swelling, severe pain, or inability to move? You may need an X-ray. Immobilize the area and seek help.",
+    "pregnancy": "Are you experiencing missed periods or nausea? Have you taken a pregnancy test?",
+    "gas": "Do you feel bloated or have frequent burping? Gas can be due to diet or digestion issues. Avoid fried and spicy foods.",
+    "indigestion": "Do you feel heaviness after eating? Try eating small, frequent meals and avoid overeating.",
+    "piles": "Do you have pain or bleeding while passing stool? Piles can be managed with a high-fiber diet and hydration.",
+    "kidney stones": "Do you have severe back pain or pain while urinating? Kidney stones need medical evaluation.",
+    "jaundice": "Is there yellowing of eyes or skin? It may be liver-related. Get a liver function test done.",
+    "hepatitis": "Have you been diagnosed with any form of hepatitis? It affects the liver and needs medical care.",
+    "flu": "Are you experiencing chills, fever, body ache, or fatigue? Flu is contagious and needs rest and hydration.",
+    "migraine": "Is the headache one-sided with nausea or light sensitivity? Migraines can be triggered by stress or lack of sleep.",
+    "PCOS": "Are your periods irregular or do you have acne and weight gain? PCOS is a hormonal issue that needs lifestyle changes.",
+    "infertility": "Are you trying to conceive but facing difficulties? Infertility can have many causes. Medical consultation is advised.",
+    "tonsillitis": "Is your throat painful with difficulty swallowing? You may have tonsillitis. Warm salt water gargles can help.",
+
+    
+    # ... you can add 340+ more terms from here
+}
 owner={item.lower() for item in owner_queries}
 API_KEY = "AIzaSyD1bedJOi2IO0tnQBmi6oYNT8m_w4USI-Y"
 API_URL ="https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
+st.set_page_config(page_title="WELCOME TO THE AI DOCTOR👩🏻‍⚕️ GPT🤖", layout="centered")
+if 'chat_history' not in st.session_state:
+    st.session_state.chat_history = []
+# ---------- Custom CSS ----------
+st.markdown("""
+    <style>
+    body {
+        background: linear-gradient(to right, #f9f9f9, #e3f2fd);
+    }
+    .title {
+        font-size: 40px;
+        color: #0d47a1;
+        text-align: center;
+        font-weight: bold;
+    }
+    .subtext {
+        text-align: center;
+        font-size: 18px;
+        color: #444;
+        margin-bottom: 30px;
+    }
+    .response-box {
+        background-color: #ffffff;
+        border-radius: 15px;
+        padding: 20px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        font-size: 17px;
+        margin-top: 15px;
+    }
+    .stButton button {
+        background-color: #0d47a1;
+        color: white;
+        font-size: 16px;
+        padding: 10px 20px;
+        border-radius: 8px;
+    }
+    </style>
+""", unsafe_allow_html=True)
+# ---------- Image & Title ----------
+col1 = st.columns([6])[0]
+with col1:
+    st.image("pic.png",  width=150 )
+    
+st.markdown('<div class="subtext">Project of GOVERMENT COLLEGE OF TECHNOLOGY HYDERABAD</div>', unsafe_allow_html=True)
+st.markdown('<div class="subtext">DEPARMENT OF COMPUTER INFORMATION TECHNOLOGY</div>', unsafe_allow_html=True)    
+st.markdown('<div class="title">WELCOME TO THE AI DOCTOR👩🏻‍⚕️ GPT🤖</div>', unsafe_allow_html=True)
+st.markdown('<div class="subtext">made by the ABDULLAH MEMON , ANNUS , SADAM , ABDUL SAMI AND USAID</div>', unsafe_allow_html=True)
 
-st.title("WELCOME TO THE CHAT BOT🤖 GPT")
-st.text("Project of GCT COLLEGE DEP: OF C.I.T")
-st.text("made by ABDULLAH , ANNUS , SADDAM , ABDUL SAMI")
+
+# ---------- Feature Selection ----------
+st.subheader("Choose Mode")
+Chat=st.checkbox("💬 Chat Mode")
+Voice=st.checkbox("🎤Voice Mode")
 headers = {
     "Content-Type": "application/json",
 }
 params = {
     "key": API_KEY,
 }
-if True:
+if Chat:
     input=st.text_input("FEEL TO FREE ASK QUESTION ABDULLAH GPT")
     button=st.button("ASK");
+    
     if button or input: 
     # Check input in lowercased form
+        st.success("You said:"+input)
+        st.session_state.chat_history.append(("You :", input))
+
         input=input.lower()
-        
         if input.lower().strip() in owner:
-            g = "GCT STUDENTS ARE: ABDULLAH , ANNUS , SADDAM , ABDUL SAMI THEY ARE MY OWNERS AND THEY MADE ME"
-            st.text(g)
+            g = "I AM POWERED BY ABDULLAH MEMON, ANNUS , SADAM , ABDUL SAMI AND USAID. THEY ARE MY OWNERS AND THEY MADE ME"
+            
         elif input=="":
-            g=("Please write any thing  you want to ask ABDULLAH GPT")
-            st.text(g)
-        else:    
-            data = {
-                "contents": [
-                    {
-                        "parts": [
-                            {"text":input}
+            g=("Please write any thing you want to ask CHAT BOT GPT")
+            
+        elif input:
+            matched = False
+            for keyword in medical_keywords:
+                if keyword in input.lower():
+                    g=medical_keywords[keyword]
+                    matched = True
+                    break  # Stop after first match
+
+            if not matched:   
+                st.success("plz wait we are processing and give you answer in few seconds🤗🤗🤗🤗🤗🤗") 
+                data = {
+                    "contents": [
+                        {
+                            "parts": [
+                                {"text":input}
+                            ]
+                        }
+                    ]
+                }
+                response = requests.post(API_URL, headers=headers,params=params, json=data)
+                #st.text(response.status_code)
+                result = response.json()
+                g=(result['candidates'][0]['content']['parts'][0]['text'])
+        st.success("AI DOCTOR :"+g)        
+        st.session_state.chat_history.append(("AI Doctor :", g))
+    for speaker, message in st.session_state.chat_history:
+        st.markdown(f"<div class='response-box'><b>{speaker}:</b> {message}</div>", unsafe_allow_html=True)    
+elif Voice:
+    button=st.button("ASK");
+    if button:
+        recognizer = sr.Recognizer()
+        with sr.Microphone() as source:
+            st.info("Listening... Speak now!")
+            audio = recognizer.listen(source)
+
+        try:
+            input = recognizer.recognize_google(audio)
+            st.success("You said:"+input)
+            st.success("plz wait we are processing and give you answer in few seconds🤗🤗🤗🤗🤗🤗")
+            
+            
+            input=input.lower()
+            
+            if input.lower().strip() in owner:
+                g = "I AM POWERED BY ABDULLAH , ANNUS , SADDAM , ABDUL SAMI THEY ARE MY OWNERS AND THEY MADE ME"
+                
+                tts = gTTS(g)
+                filename = "response.mp3"
+                tts.save(filename)
+            
+                audio_file = open(filename, 'rb')
+                audio_bytes = audio_file.read()
+                st.audio(audio_bytes, format='audio/mp3')
+                
+                audio_file.close()
+                os.remove(filename)
+            elif input:
+                matched = False
+                for keyword in medical_voice:
+                    if keyword in input.lower():
+                        g=medical_voice[keyword]
+                        
+                        tts = gTTS(g)
+                        filename = "response.mp3"
+                        tts.save(filename)
+                    
+                        audio_file = open(filename, 'rb')
+                        audio_bytes = audio_file.read()
+                        st.audio(audio_bytes, format='audio/mp3')
+                        
+                        audio_file.close()
+                        os.remove(filename)
+                        matched = True
+                        break
+
+                if not matched:  
+                    data = {
+                        "contents": [
+                            {
+                                "parts": [
+                                    {"text":input}
+                                ]
+                            }
                         ]
                     }
-                ]
-            }
-            response = requests.post(API_URL, headers=headers,params=params, json=data)
-            #st.text(response.status_code)
-            result = response.json()
-            g=(result['candidates'][0]['content']['parts'][0]['text'])
-            st.text(g)
+                    response = requests.post(API_URL, headers=headers,params=params, json=data)
+                    result = response.json()
+                    g=(result['candidates'][0]['content']['parts'][0]['text'])
+                    tts = gTTS(g)
+                    filename = "response.mp3"
+                    tts.save(filename)
+                    
+                    audio_file = open(filename, 'rb')
+                    audio_bytes = audio_file.read()
+                    st.audio(audio_bytes, format='audio/mp3')
+                    # Clean up
+                    audio_file.close()
+                    os.remove(filename)   
+        except sr.UnknownValueError:
+            st.error("Sorry, I could not understand the audio.")
+        except sr.RequestError as e:
+            st.error(f"Could not request results; {e}")
