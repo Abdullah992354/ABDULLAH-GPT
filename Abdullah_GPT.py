@@ -713,7 +713,7 @@ if True:
     input=st.text_input("FEEL TO FREE ASK QUESTION ABDULLAH GPT")
     button=st.button("ASK");
     
-    if button or input: 
+    if button: 
     # Check input in lowercased form
         st.success("You said: "+input)
         st.session_state.chat_history.append(("You ", input))
