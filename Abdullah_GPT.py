@@ -74,7 +74,7 @@ if True:
                     {"user :": speaker, "ai assestant :": message}
                     for speaker, message in st.session_state.chat_history
                     ]
-                 data = {
+                data = {
                     "contents": [
                         {
                             "parts": [
