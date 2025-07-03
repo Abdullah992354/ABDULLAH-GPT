@@ -70,7 +70,11 @@ if True:
             
         elif input:   
              with st.spinner("plz wait we are processing and give you answer in few seconds🤗🤗🤗🤗🤗🤗"): 
-                data = {
+                chat_payload = [
+                    {"user :": speaker, "ai assestant :": message}
+                    for speaker, message in st.session_state.chat_history
+                    ]
+                 data = {
                     "contents": [
                         {
                             "parts": [
